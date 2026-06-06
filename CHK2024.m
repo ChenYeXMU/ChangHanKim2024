@@ -5,11 +5,11 @@
 % Ye Chen, Xiamen University, Feb 2026
 
 clear; clc; close all;
-mypath = 'C:\Program Files\MATLAB\VFIToolkit';
+mypath = 'C:\Program Files\MATLAB\VFIToolkit2.5';
 addpath(genpath(mypath))
 
 %% Scenarios
-Params.Reform = 0; % 0: Benchmark
+Params.Reform = 1; % 0: Benchmark
                    % 1: UBI reform
                    % 2: NIT reform
 
@@ -67,7 +67,7 @@ simoptions = struct();
 %simoptions.gridinterplayer = vfoptions.gridinterplayer;
 %simoptions.ngridinterp = vfoptions.ngridinterp;
 tic;
-[V, Policy] = ValueFnIter_Case1(n_d,n_a,n_z,d_grid,a_grid,z_grid,pi_z,ReturnFn,Params,DiscountFactorParamNames,[],vfoptions);
+[V, Policy] = ValueFnIter_InfHorz(n_d,n_a,n_z,d_grid,a_grid,z_grid,pi_z,ReturnFn,Params,DiscountFactorParamNames,[],vfoptions);
 toc
 
 %% Genera eqm variables
@@ -93,7 +93,7 @@ FnsToEvaluate2 = FnsToEvaluate;
 FnsToEvaluate2.hours = @(h,aprime,a,z) h;  % working hours
 FnsToEvaluate2.earnings = @(h,aprime,a,z,w) w*z*h; % labor earnings
 FnsToEvaluate2.income = @(h,aprime,a,z,w,r) w*z*h+r*a; % before-tax income
-FnsToEvaluate2.netincome = @(h,aprime,a,z,w,r,tau) (1-tau)*(w*z*h+r*a); % after-tax income
+FnsToEvaluate2.netincome = @(h,aprime,a,z,w,r,tau,Tr) (1-tau)*(w*z*h+r*a)+Tr; % after-tax income
 FnsToEvaluate2.wealth = @(h,aprime,a,z) a;  % assets
 FnsToEvaluate2.consumption = @(h,aprime,a,z,r,w,tau,Tr) (1-tau)*(w*z*h+r*a)+a+Tr-aprime; % consumption
 FnsToEvaluate2.taxes = @(h,aprime,a,z,r,w,tau) tau*(w*z*h+r*a); % taxes
@@ -113,7 +113,7 @@ heteroagentoptions.verbose = 1;
 heteroagentoptions.toleranceGEprices = 10^(-5);
 heteroagentoptions.toleranceGEcondns = 10^(-5);
 tic;
-[p_eqm, GEcondns] = HeteroAgentStationaryEqm_Case1(n_d,n_a,n_z,0,pi_z,d_grid,a_grid,z_grid,ReturnFn,FnsToEvaluate,GeneralEqmEqns,Params,DiscountFactorParamNames,[],[],[],GEPriceParamNames,heteroagentoptions,simoptions,vfoptions);
+[p_eqm, GEcondns] = HeteroAgentStationaryEqm_InfHorz(n_d,n_a,n_z,[],pi_z,d_grid,a_grid,z_grid,ReturnFn,FnsToEvaluate,GeneralEqmEqns,Params,DiscountFactorParamNames,[],[],[],GEPriceParamNames,heteroagentoptions,simoptions,vfoptions);
 toc
 
 % Update the equilibrium values
@@ -125,17 +125,17 @@ end
 
 %% Evaluate the model results
 % Solve for value function and policy function
-[V, Policy] = ValueFnIter_Case1(n_d,n_a,n_z,d_grid,a_grid,z_grid,pi_z,ReturnFn,Params,DiscountFactorParamNames,[],vfoptions);
+[V, Policy] = ValueFnIter_InfHorz(n_d,n_a,n_z,d_grid,a_grid,z_grid,pi_z,ReturnFn,Params,DiscountFactorParamNames,[],vfoptions);
 % Values on the grid
-ValuesOnGrid = EvalFnOnAgentDist_ValuesOnGrid_Case1(Policy,FnsToEvaluate,Params,[],n_d,n_a,n_z,d_grid,a_grid,z_grid,simoptions);
+ValuesOnGrid = EvalFnOnAgentDist_ValuesOnGrid_InfHorz(Policy,FnsToEvaluate,Params,[],n_d,n_a,n_z,d_grid,a_grid,z_grid,simoptions);
 % Convert policy from indices to values
-PolicyValues = PolicyInd2Val_Case1(Policy,n_d,n_a,n_z,d_grid,a_grid,vfoptions);
+PolicyValues = PolicyInd2Val_InfHorz(Policy,n_d,n_a,n_z,d_grid,a_grid,vfoptions);
 % Stationary distribution
-StationaryDist = StationaryDist_Case1(Policy,n_d,n_a,n_z,pi_z,simoptions,Params);
+StationaryDist = StationaryDist_InfHorz(Policy,n_d,n_a,n_z,pi_z,simoptions,Params);
 % Aggregate variables
 % AggVars = EvalFnOnAgentDist_AggVars_Case1(StationaryDist,Policy,FnsToEvaluate2,Params,[],n_d,n_a,n_z,d_grid,a_grid,z_grid,simoptions);
 % Calculate various stats
-AllStats = EvalFnOnAgentDist_AllStats_Case1(StationaryDist,Policy,FnsToEvaluate2,Params,[],n_d,n_a,n_z,d_grid,a_grid,z_grid,simoptions);
+AllStats = EvalFnOnAgentDist_AllStats_InfHorz(StationaryDist,Policy,FnsToEvaluate2,Params,[],n_d,n_a,n_z,d_grid,a_grid,z_grid,simoptions);
 
 %% Aggregate moments
 agg.KK = AllStats.K.Mean;  % capital
