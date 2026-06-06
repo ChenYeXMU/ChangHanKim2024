@@ -1,0 +1,6 @@
+# Ignore MATLAB benchmark script
+benchmark.m
+benchmark_ReturnFn.m
+CHK2024v2.m
+CHK2024v2_ReturnFn.m
+CHK2024MDY-NITvUBI.pdf
